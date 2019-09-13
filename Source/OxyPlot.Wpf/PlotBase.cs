@@ -62,6 +62,11 @@ namespace OxyPlot.Wpf
         private Grid grid;
 
         /// <summary>
+        /// The mouse grid. (This is an additional grid on top of everthing else to fix the issue of mouse events getting lost. It must be added last so it covers all other controls.)
+        /// </summary>
+        private Grid mouseGrid;
+
+        /// <summary>
         /// Invalidation flag (0: no update, 1: update visual elements).
         /// </summary>
         private int isPlotInvalidated;
@@ -250,6 +255,8 @@ namespace OxyPlot.Wpf
                 return;
             }
 
+            this.mouseGrid.IsHitTestVisible = true;
+
             this.UpdateModel(updateData);
 
             if (Interlocked.CompareExchange(ref this.isPlotInvalidated, 1, 0) == 0)
@@ -259,6 +266,8 @@ namespace OxyPlot.Wpf
                 // which will occur asynchronously unless subsequently forced by UpdateLayout.
                 this.BeginInvoke(this.InvalidateArrange);
             }
+
+            this.mouseGrid.IsHitTestVisible = false;
         }
 
         /// <summary>
@@ -286,11 +295,14 @@ namespace OxyPlot.Wpf
             this.zoomControl = new ContentControl();
             this.overlays.Children.Add(this.zoomControl);
 
-            // add additional grid on top of everthing else to fix issue of mouse events getting lost
-            // it must be added last so it covers all other controls
-            var mouseGrid = new Grid();
-            mouseGrid.Background = Brushes.Transparent; // background must be set for hit test to work
-            this.grid.Children.Add(mouseGrid); 
+            this.mouseGrid = new Grid();
+            // to make the tooltips be displayed: 
+            // at the beginning of the method PlotInvalidate,
+            // make the mouseGrid.IsHitTestVisible be true,
+            // and at the end of it make it false again
+            this.mouseGrid.IsHitTestVisible = false;
+            this.mouseGrid.Background = Brushes.Transparent; // background must be set for hit test to work
+            this.grid.Children.Add(this.mouseGrid);
         }
 
         /// <summary>
