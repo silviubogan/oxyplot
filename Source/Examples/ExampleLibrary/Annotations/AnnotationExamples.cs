@@ -9,6 +9,9 @@ namespace ExampleLibrary
     using OxyPlot;
     using OxyPlot.Annotations;
     using OxyPlot.Axes;
+    using OxyPlot.Series;
+    using System;
+    using System.Threading.Tasks;
 
     [Examples("Annotations"), Tags("Annotations")]
     public static class AnnotationExamples
@@ -16,7 +19,7 @@ namespace ExampleLibrary
         [Example("Tool tips")]
         public static PlotModel ToolTips()
         {
-            var model = new PlotModel { Title = "Tool tips" };
+            var model = new PlotModel { Title = "Tool tips", TitleToolTip = "The Plot" };
             model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom });
             model.Axes.Add(new LinearAxis { Position = AxisPosition.Left });
             model.Annotations.Add(new LineAnnotation { Slope = 0.1, Intercept = 1, Text = "LineAnnotation", ToolTip = "This is a tool tip for the LineAnnotation" });
@@ -26,6 +29,154 @@ namespace ExampleLibrary
             model.Annotations.Add(new ArrowAnnotation { StartPoint = new DataPoint(8, 4), EndPoint = new DataPoint(0, 0), Color = OxyColors.Green, Text = "ArrowAnnotation", ToolTip = "This is a tool tip for the ArrowAnnotation" });
             model.Annotations.Add(new TextAnnotation { TextPosition = new DataPoint(60, 60), Text = "TextAnnotation", ToolTip = "This is a tool tip for the TextAnnotation" });
             return model;
+        }
+
+        /// <summary>
+        /// The category in which this example is put is temporary.
+        /// </summary>
+        /// <returns></returns>
+        [Example("Crazy Refresh")]
+        public static PlotModel CrazyRefresh()
+        {
+            var plot = new PlotModel();
+
+            plot.IsLegendVisible = true;
+
+            //var rs = new RectangleSeries();
+            //rs.Items.Add(new RectangleItem(0.5, 9.5, 0.6, 0.8, 1));
+            //plot.Series.Add(rs);
+
+            var fs = new FunctionSeries(x => Math.Sin(x), 0, 10, 0.001);
+            plot.Series.Add(fs);
+            fs = new FunctionSeries(x => Math.Cos(x), 0, 10, 0.001)
+            {
+                ToolTip = "FLASHING!"
+            };
+            plot.Series.Add(fs);
+
+            var ra = new RectangleAnnotation()
+            {
+                MinimumX = 0.5,
+                MinimumY = -0.8,
+                MaximumX = 9.5,
+                MaximumY = -0.6,
+                ToolTip = "Test",
+                Text = "Hover cant work because this element gets replaced.\n" +
+                "Clicking me doesn't count as clicking the plot,\n" +
+                "But sometimes they go to MouseGrid.",
+            };
+            plot.Annotations.Add(ra);
+
+            var rnd = new Random();
+            Crazy(plot, rnd, fs);
+
+            plot.MouseDown += (s, e) =>
+            {
+                plot.Title = "MouseDown " + rnd.Next(100000);
+                e.Handled = true;
+            };
+            plot.MouseUp += (s, e) =>
+            {
+                plot.Title = "MouseUp " + rnd.Next(100000);
+                e.Handled = true;
+            };
+            plot.MouseMove += (s, e) =>
+            {
+                plot.Title = "MouseMove " + rnd.Next(100000);
+                e.Handled = true;
+            };
+
+
+            return plot;
+        }
+
+        private static async Task Crazy(PlotModel plot, Random rnd, FunctionSeries fs)
+        {
+            await Task.Delay(20);
+            fs.Color = OxyColor.FromRgb((byte)rnd.Next(255), (byte)rnd.Next(255), (byte)rnd.Next(255));
+            fs.ToolTip = $"ToolTip #{rnd.Next(100000)}";
+
+            plot.InvalidatePlot(true);
+            await Crazy(plot, rnd, fs);
+        }
+
+
+        [Example("TEST")]
+        public static PlotModel FromWinForms2()
+        {
+            var pm = new PlotModel
+            {
+                Title = "Trigonometric functions",
+                Subtitle = "Example using the FunctionSeries",
+                PlotType = PlotType.Cartesian,
+                Background = OxyColors.White,
+                TitleToolTip = "Title"
+            };
+
+            var rs = new FunctionSeries(x => x, 0, 5, 0.5)
+            {
+                ToolTip = "My Function Series !"
+            };
+            pm.Series.Add(rs);
+
+            pm.Annotations.Add(new OxyPlot.Annotations.RectangleAnnotation()
+            {
+                ToolTip = "Rectangle",
+                Fill = OxyColors.Blue,
+                MinimumX = 0,
+                MinimumY = 0,
+                MaximumX = 100,
+                MaximumY = 100,
+                Layer = AnnotationLayer.BelowAxes
+            });
+
+            pm.Axes.Clear();
+            pm.Axes.Add(new OxyPlot.Axes.LinearAxis()
+            {
+                Position = OxyPlot.Axes.AxisPosition.Bottom,
+                Minimum = -20,
+                Maximum = 80,
+                ToolTip = "Bottom axis",
+                TickStyle = OxyPlot.Axes.TickStyle.Inside,
+                Title = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                TitlePosition = 0,
+                ClipTitle = true
+            });
+            pm.Axes.Add(new OxyPlot.Axes.LinearAxis()
+            {
+                Position = OxyPlot.Axes.AxisPosition.Left,
+                Minimum = -10,
+                Maximum = 10,
+                ToolTip = "Left axis",
+                TickStyle = OxyPlot.Axes.TickStyle.Inside,
+                Title = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                TitlePosition = 0,
+                ClipTitle = true
+            });
+            pm.Axes.Add(new OxyPlot.Axes.LinearAxis()
+            {
+                Position = OxyPlot.Axes.AxisPosition.Top,
+                Minimum = -20,
+                Maximum = 80,
+                ToolTip = "Top axis",
+                TickStyle = OxyPlot.Axes.TickStyle.Inside,
+                Title = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                TitlePosition = 1,
+                ClipTitle = true
+            });
+            pm.Axes.Add(new OxyPlot.Axes.LinearAxis()
+            {
+                Position = OxyPlot.Axes.AxisPosition.Right,
+                Minimum = -10,
+                Maximum = 10,
+                ToolTip = "Right axis",
+                TickStyle = OxyPlot.Axes.TickStyle.Inside,
+                Title = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                TitlePosition = 1,
+                ClipTitle = true
+            });
+
+            return pm;
         }
     }
 }
