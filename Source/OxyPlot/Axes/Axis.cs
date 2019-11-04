@@ -1747,5 +1747,122 @@ namespace OxyPlot.Axes
                 handler(this, args);
             }
         }
+
+        /// <summary>
+        /// When overridden in a derived class, tests if the plot element is hit by the specified point.
+        /// </summary>
+        /// <param name="args">The hit test arguments.</param>
+        /// <returns>
+        /// The result of the hit test.
+        /// </returns>
+        protected override HitTestResult HitTestOverride(HitTestArguments args)
+        {
+            Axis xaxis = null, yaxis = null;
+
+            // Get the axis position of the given point. Using null if the point is inside the plot area.
+            AxisPosition? position = null;
+            double plotAreaValue = 0;
+            if (args.Point.X < this.PlotModel.PlotArea.Left)
+            {
+                position = AxisPosition.Left;
+                plotAreaValue = this.PlotModel.PlotArea.Left;
+            }
+
+            if (args.Point.X > this.PlotModel.PlotArea.Right)
+            {
+                position = AxisPosition.Right;
+                plotAreaValue = this.PlotModel.PlotArea.Right;
+            }
+
+            if (args.Point.Y < this.PlotModel.PlotArea.Top)
+            {
+                position = AxisPosition.Top;
+                plotAreaValue = this.PlotModel.PlotArea.Top;
+            }
+
+            if (args.Point.Y > this.PlotModel.PlotArea.Bottom)
+            {
+                position = AxisPosition.Bottom;
+                plotAreaValue = this.PlotModel.PlotArea.Bottom;
+            }
+
+            foreach (var axis in this.PlotModel.Axes)
+            {
+                if (!axis.IsAxisVisible)
+                {
+                    continue;
+                }
+
+                if (axis is MagnitudeAxis)
+                {
+                    continue;
+                }
+
+                if (axis is AngleAxis)
+                {
+                    continue;
+                }
+
+                double x = double.NaN;
+                if (axis.IsHorizontal())
+                {
+                    x = axis.InverseTransform(args.Point.X);
+                }
+
+                if (axis.IsVertical())
+                {
+                    x = axis.InverseTransform(args.Point.Y);
+                }
+
+                if (x >= axis.ActualMinimum && x <= axis.ActualMaximum)
+                {
+                    if (position == axis.Position)
+                    {
+                        // Choose right tier
+                        double positionTierMinShift = axis.PositionTierMinShift;
+                        double positionTierMaxShift = axis.PositionTierMaxShift;
+
+                        double posValue = axis.IsHorizontal() ? args.Point.Y : args.Point.X;
+                        bool isLeftOrTop = position == AxisPosition.Top || position == AxisPosition.Left;
+                        if ((posValue >= plotAreaValue + positionTierMinShift
+                             && posValue < plotAreaValue + positionTierMaxShift && !isLeftOrTop)
+                            ||
+                            (posValue <= plotAreaValue - positionTierMinShift
+                             && posValue > plotAreaValue - positionTierMaxShift && isLeftOrTop))
+                        {
+                            if (axis.IsHorizontal())
+                            {
+                                if (xaxis == null)
+                                {
+                                    xaxis = axis;
+                                    if (yaxis != null)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (axis.IsVertical())
+                            {
+                                if (yaxis == null)
+                                {
+                                    yaxis = axis;
+                                    if (xaxis != null)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (xaxis == this || yaxis == this)
+            {
+                return new HitTestResult(this, args.Point);
+            }
+
+            return null;
+        }
     }
 }

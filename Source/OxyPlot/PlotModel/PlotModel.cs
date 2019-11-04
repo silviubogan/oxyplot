@@ -859,7 +859,7 @@ namespace OxyPlot
 
             foreach (var axis in this.Axes)
             {
-                if(!axis.IsAxisVisible)
+                if (!axis.IsAxisVisible)
                 {
                     continue;
                 }
