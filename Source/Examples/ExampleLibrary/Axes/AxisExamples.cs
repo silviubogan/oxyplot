@@ -1384,5 +1384,29 @@ namespace ExampleLibrary
 
             return plotModel;
         }
+
+        [Example("Axis hit testing")]
+        public static PlotModel AxisHitTesting()
+        {
+            var model = new PlotModel { Title = "Axis hit testing" };
+
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "BOTTOM" });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "LEFT" });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "BOTTOM 2", PositionTier = 1 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "LEFT 2", PositionTier = 1 });
+
+            model.Annotations.Add(new OxyPlot.Annotations.RectangleAnnotation { MinimumX = 20, MaximumX = 70, MinimumY = 10, MaximumY = 40, Text = "RectangleAnnotation", Fill = OxyColor.FromAColor(99, OxyColors.Blue) });
+
+            model.MouseDown += (object sender, OxyMouseDownEventArgs e) =>
+            {
+                if (e.HitTestResult?.Element is Axis ax)
+                {
+                    model.Title = ax.Title;
+                    model.InvalidatePlot(true);
+                }
+            };
+
+            return model;
+        }
     }
 }
